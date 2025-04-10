@@ -1,12 +1,12 @@
-export type CourierType = 'incoming' | 'outgoing' | 'decision';
-export type CourierStatus = 'pending' | 'processing' | 'completed' | 'delayed';
-export type CourierPriority = 'normal' | 'urgent';
+export type CourierType = "incoming" | "outgoing" | "decision";
+export type CourierStatus = "pending" | "processing" | "completed" | "delayed";
+export type CourierPriority = "normal" | "urgent";
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'employee' | 'manager';
+  role: "admin" | "employee" | "manager";
 }
 
 export interface Courier {
@@ -42,7 +42,7 @@ export interface Decision {
   reference: string;
   description: string;
   status: CourierStatus;
-  priority: 'normal' | 'urgent';
+  priority: "normal" | "urgent";
   observation?: string;
   attachments?: {
     name: string;

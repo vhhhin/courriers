@@ -1,7 +1,7 @@
-import { Courier } from '../types/courier';
+import { Courier } from "../types/courier";
 
-const STORAGE_KEY = 'couriers';
-const FILES_STORAGE_KEY = 'courier_files';
+const STORAGE_KEY = "couriers";
+const FILES_STORAGE_KEY = "courier_files";
 
 interface StoredFile {
   id: string;
@@ -17,15 +17,18 @@ export const courierService = {
       const saved = localStorage.getItem(STORAGE_KEY);
       return saved ? JSON.parse(saved) : [];
     } catch (error) {
-      console.error('Erreur lors de la récupération des courriers:', error);
+      console.error("Erreur lors de la récupération des courriers:", error);
       return [];
     }
   },
 
-  getNextNumber: (type: 'incoming' | 'outgoing'): string => {
+  getNextNumber: (type: "incoming" | "outgoing"): string => {
     const couriers = courierService.getAll();
-    const typeCouriers = couriers.filter(c => c.type === type);
-    const maxNumber = Math.max(...typeCouriers.map(c => parseInt(c.number) || 0), 0);
+    const typeCouriers = couriers.filter((c) => c.type === type);
+    const maxNumber = Math.max(
+      ...typeCouriers.map((c) => parseInt(c.number) || 0),
+      0
+    );
     return (maxNumber + 1).toString();
   },
 
@@ -36,7 +39,7 @@ export const courierService = {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(couriers));
       return courier;
     } catch (error) {
-      console.error('Erreur lors de l\'ajout du courrier:', error);
+      console.error("Erreur lors de l'ajout du courrier:", error);
       throw error;
     }
   },
@@ -44,10 +47,10 @@ export const courierService = {
   update: async (courier: Courier): Promise<Courier> => {
     try {
       const couriers = courierService.getAll();
-      const index = couriers.findIndex(c => c.id === courier.id);
-      
+      const index = couriers.findIndex((c) => c.id === courier.id);
+
       if (index === -1) {
-        throw new Error('Courrier non trouvé');
+        throw new Error("Courrier non trouvé");
       }
 
       couriers[index] = {
@@ -56,35 +59,35 @@ export const courierService = {
           ...courier.history,
           {
             date: new Date(),
-            action: 'updated',
-            user: 'current-user'
-          }
-        ]
+            action: "updated",
+            user: "current-user",
+          },
+        ],
       };
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(couriers));
       return courier;
     } catch (error) {
-      console.error('Erreur lors de la modification:', error);
+      console.error("Erreur lors de la modification:", error);
       throw error;
     }
   },
 
   getIncoming: () => {
-    return courierService.getAll().filter(c => c.type === 'incoming');
+    return courierService.getAll().filter((c) => c.type === "incoming");
   },
 
   getOutgoing: () => {
-    return courierService.getAll().filter(c => c.type === 'outgoing');
+    return courierService.getAll().filter((c) => c.type === "outgoing");
   },
 
   deleteById: (id: string) => {
     try {
       const couriers = courierService.getAll();
-      const filteredCouriers = couriers.filter(c => c.id !== id);
+      const filteredCouriers = couriers.filter((c) => c.id !== id);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredCouriers));
     } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
+      console.error("Erreur lors de la suppression:", error);
       throw new Error("Impossible de supprimer le courrier");
     }
   },
@@ -100,7 +103,7 @@ export const courierService = {
             courierId,
             name: file.name,
             data: fileData,
-            type: file.type
+            type: file.type,
           };
 
           const files = courierService.getFiles();
@@ -117,12 +120,12 @@ export const courierService = {
 
   getFiles: (courierId?: string): StoredFile[] => {
     try {
-      const files = JSON.parse(localStorage.getItem(FILES_STORAGE_KEY) || '[]');
-      return courierId 
+      const files = JSON.parse(localStorage.getItem(FILES_STORAGE_KEY) || "[]");
+      return courierId
         ? files.filter((f: StoredFile) => f.courierId === courierId)
         : files;
     } catch {
       return [];
     }
-  }
+  },
 };

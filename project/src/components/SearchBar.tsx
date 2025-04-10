@@ -1,55 +1,65 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react';
-import { Search } from 'lucide-react';
+import React, { useState, ChangeEvent, useEffect, useCallback } from "react";
+import { Search } from "lucide-react";
 
-type DocumentType = 'incoming' | 'outgoing' | 'decision';
+type DocumentType = "incoming" | "outgoing" | "decision";
 
 const searchFields: Record<DocumentType, string[]> = {
-  incoming: ['numéro', 'date', 'expéditeur', 'destinataire', 'objet'],
-  outgoing: ['numéro', 'date', 'expéditeur', 'destinataire', 'objet', 'référence'],
-  decision: ['numéro', 'date', 'objet'],
+  incoming: ["numéro", "date", "expéditeur", "destinataire", "objet"],
+  outgoing: [
+    "numéro",
+    "date",
+    "expéditeur",
+    "destinataire",
+    "objet",
+    "référence",
+  ],
+  decision: ["numéro", "date", "objet"],
 };
 
 interface SearchBarProps {
   onSearch: (type: DocumentType, searchData: Record<string, string>) => void;
-  language: 'fr' | 'ar';
+  language: "fr" | "ar";
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, language }) => {
-  const [type, setType] = useState<DocumentType>('incoming');
+  const [type, setType] = useState<DocumentType>("incoming");
   const [searchData, setSearchData] = useState<Record<string, string>>({});
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+
+  // Add debounced search
+  const debouncedSearch = useCallback(
+    debounce((type: DocumentType, data: Record<string, string>) => {
+      setError("");
+      onSearch(type, data); // Always call onSearch, even with empty data
+    }, 300), // 300ms delay for typing
+    [onSearch]
+  );
+
+  // Trigger search when inputs change
+  useEffect(() => {
+    debouncedSearch(type, searchData);
+  }, [searchData, type, debouncedSearch]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setSearchData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSearch = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (Object.values(searchData).every(value => !value)) {
-      setError(language === 'ar' ? 'يرجى إدخال معايير البحث' : 'Veuillez entrer des critères de recherche');
-      return;
-    }
-    setError('');
-    onSearch(type, searchData);
+    setSearchData((prev) => ({ ...prev, [name]: value }));
   };
 
   const getPlaceholder = (field: string) => {
     const translations = {
-      'numéro': language === 'ar' ? 'رقم الوثيقة' : 'Numéro',
-      'date': language === 'ar' ? 'التاريخ' : 'Date',
-      'expéditeur': language === 'ar' ? 'المرسل' : 'Expéditeur',
-      'destinataire': language === 'ar' ? 'المرسل إليه' : 'Destinataire',
-      'objet': language === 'ar' ? 'الموضوع' : 'Objet',
-      'référence': language === 'ar' ? 'المرجع' : 'Référence'
+      numéro: language === "ar" ? "رقم الوثيقة" : "Numéro",
+      date: language === "ar" ? "التاريخ" : "Date",
+      expéditeur: language === "ar" ? "المرسل" : "Expéditeur",
+      destinataire: language === "ar" ? "المرسل إليه" : "Destinataire",
+      objet: language === "ar" ? "الموضوع" : "Objet",
+      référence: language === "ar" ? "المرجع" : "Référence",
     };
     return translations[field as keyof typeof translations] || field;
   };
 
   return (
-    <form onSubmit={handleSearch} className="bg-white rounded-md shadow-sm border border-gray-200 p-2">
+    <div className="bg-white rounded-md shadow-sm border border-gray-200 p-2">
       <div className="flex items-center gap-2">
-        {/* Type de document */}
         <select
           value={type}
           onChange={(e) => {
@@ -58,40 +68,43 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, language }) => {
           }}
           className="p-1.5 border rounded-md text-sm w-32 h-9"
         >
-          <option value="incoming">{language === 'ar' ? 'وارد' : 'Courrier arrivée'}</option>
-          <option value="outgoing">{language === 'ar' ? 'صادر' : 'Courrier départ'}</option>
-          <option value="decision">{language === 'ar' ? 'قرار' : 'Décision'}</option>
+          <option value="incoming">
+            {language === "ar" ? "وارد" : "Courrier arrivée"}
+          </option>
+          <option value="outgoing">
+            {language === "ar" ? "صادر" : "Courrier départ"}
+          </option>
+          <option value="decision">
+            {language === "ar" ? "قرار" : "Décision"}
+          </option>
         </select>
 
-        {/* Champs de recherche */}
         {searchFields[type].map((field) => (
           <input
             key={field}
-            type={field === 'date' ? 'date' : 'text'}
+            type={field === "date" ? "date" : "text"}
             name={field}
             placeholder={getPlaceholder(field)}
-            value={searchData[field] || ''}
+            value={searchData[field] || ""}
             onChange={handleChange}
             className="p-1.5 border rounded-md text-sm w-32 h-9"
           />
         ))}
-
-        {/* Bouton de recherche */}
-        <button
-          type="submit"
-          className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm flex items-center gap-1 h-9"
-        >
-          <Search size={14} />
-          {language === 'ar' ? 'بحث' : 'Rechercher'}
-        </button>
       </div>
 
-      {/* Message d'erreur */}
-      {error && (
-        <div className="text-red-500 text-xs mt-1">
-          {error}
-        </div>
-      )}
-    </form>
+      {error && <div className="text-red-500 text-xs mt-1">{error}</div>}
+    </div>
   );
 };
+
+// Add debounce utility function
+function debounce<T extends (...args: any[]) => void>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
